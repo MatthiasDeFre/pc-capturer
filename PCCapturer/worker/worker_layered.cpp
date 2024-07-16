@@ -1,14 +1,14 @@
-#include "multi_layer_processor.h"
+#include "worker_layered.h"
 
-MultiLayerProcessor::MultiLayerProcessor(std::shared_ptr<Transporter> _transporter)
+WorkerLayered::WorkerLayered(std::shared_ptr<Transporter> _transporter)
 {
 	transporter = _transporter;
 	// Need to create seperate thread for all processing work
 	// Main thread can still continue capturing / sampling etc while this thread encodes / transmits the layers
-	wrk = std::thread(&MultiLayerProcessor::processing_work, this);
+	wrk = std::thread(&WorkerLayered::processing_work, this);
 }
 
-void MultiLayerProcessor::process_layers(pcl::PointXYZ min, pcl::PointXYZ max, std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr>&& layers)
+void WorkerLayered::process_layers(pcl::PointXYZ min, pcl::PointXYZ max, std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr>&& layers)
 {
 	std::unique_lock<std::mutex> lock(m);
 	// Want to fill all buffers before giving control to the processing thread
@@ -20,7 +20,7 @@ void MultiLayerProcessor::process_layers(pcl::PointXYZ min, pcl::PointXYZ max, s
 	cv.notify_all();
 }
 
-void MultiLayerProcessor::processing_work()
+void WorkerLayered::processing_work()
 {
 	while (true) {
 		std::unique_lock<std::mutex> lock(m);
@@ -32,20 +32,21 @@ void MultiLayerProcessor::processing_work()
 		min_buffer.pop();
 		max_buffer.pop();
 		// Once the data is read / removed from the buffers we can release the lock
-		lock.unlock();
+	
 
 		// -------- Encoding --------
 		// Start seperate thread for each of the layers
 		std::vector<std::thread> encoding_wrk;
 		uint8_t layer_id = 0;
 		for (auto& l : ls) {
-			encoding_wrk.push_back(std::thread(&MultiLayerProcessor::encoding_work, this, l, layer_id));
+			encoding_wrk.push_back(std::thread(&WorkerLayered::encoding_work, this, l, layer_id));
 			layer_id++;
 		}
 		// Wait until all threads have encoded their layers
 		for (auto& t : encoding_wrk) {
 			t.join();
 		}
+		lock.unlock();
 		// END -------- Encoding --------
 		// -------- Transport --------
 		// Main header contains the bounding box of the PC
@@ -70,7 +71,7 @@ void MultiLayerProcessor::processing_work()
 			memcpy(backing_data.data() + offset, e.get_buffer().data(), e.getEncodedSize());
 			offset += e.getEncodedSize();
 		}
-		//transporter->sendEncodedData(full_size, backing_data.data());
+		transporter->SendEncodedData(full_size, backing_data.data(), false, 0);
 		// END -------- Transport --------
 
 		encoders.clear();
@@ -79,7 +80,7 @@ void MultiLayerProcessor::processing_work()
 	}
 }
 
-void MultiLayerProcessor::encoding_work(pcl::PointCloud<pcl::PointXYZRGB>::Ptr l, uint8_t layer_id)
+void WorkerLayered::encoding_work(pcl::PointCloud<pcl::PointXYZRGB>::Ptr l, uint8_t layer_id)
 {
 	EncoderDraco d;
 	d.setLayerId(layer_id);

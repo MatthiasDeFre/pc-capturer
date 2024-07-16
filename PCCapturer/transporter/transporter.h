@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <mutex>
+#include <iostream>
+#include "../result_writer.h"
 struct MessageType {
 	uint8_t packet_type;
 };
@@ -25,13 +28,16 @@ class Transporter
 public:
 	virtual void Init() = 0;
 	virtual void SetupConnection(std::string ip, uint32_t port) = 0;
-	virtual void SendEncodedData(size_t size, const char*) = 0;
+	virtual void SendEncodedData(size_t size, const char* data, bool indi, uint64_t clientID) = 0;
 	virtual InputPacket PollNextPacket(uint32_t buf_size) = 0;
+	virtual std::map<uint64_t, uint32_t> GetClientBitrates() = 0;
 	bool GetIsClientConnected();
 protected:
 	bool isClientConnected;
 	uint32_t frame_counter = 0;
 	std::vector<char> input_buffer;
 	std::vector<char> output_buffer;
+
+	std::mutex m;
 };
 

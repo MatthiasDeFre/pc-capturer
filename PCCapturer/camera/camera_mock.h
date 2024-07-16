@@ -9,7 +9,7 @@
 class CameraMock : public Camera
 {
 public:
-	CameraMock(std::string _directory, int width = 848, int height = 484, int fps = 33);
+	CameraMock(std::string _directory, int width = 848, int height = 484, int fps = 30);
 	void captureFrame(bool filter_background);
 private:
 	std::vector<cloud_pointer> frames;

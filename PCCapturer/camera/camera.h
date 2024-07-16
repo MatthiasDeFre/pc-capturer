@@ -18,6 +18,7 @@ public:
     Camera(int width = 848, int height = 484, int fps = 30);
     cloud_pointer getCurrentFrame();
     virtual void captureFrame(bool filter_background) = 0;
+    int getFrameSize();
     void setFramesToSkip(int _frames_to_skip);
 protected:
     int frames_to_skip = 0;

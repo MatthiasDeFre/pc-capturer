@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <vector>
 #include <pcl/filters/passthrough.h>
+#include <pcl/filters/crop_box.h>
 // Intel Realsense Headers
 #include <librealsense2/rs.hpp> 
 // Based on https://github.com/IntelRealSense/librealsense/blob/master/wrappers/pcl/pcl-color/rs-pcl-color.cpp
@@ -123,10 +124,12 @@ CameraRealsense::CameraRealsense(int width, int height, int fps) : Camera(width,
     {
         auto range = depth_sensor.get_option_range(RS2_OPTION_LASER_POWER);
         depth_sensor.set_option(RS2_OPTION_LASER_POWER, range.max); // Set max power
+        
         Sleep(1);
         std::cout << "laser power " << range.max << std::endl;
         //depth_sensor.set_option(RS2_OPTION_LASER_POWER, 0.f); // Disable laser
     }
+    depth_sensor.set_option(RS2_OPTION_MAX_DISTANCE, 0.75);
 }
 
 void CameraRealsense::captureFrame(bool filter_background) {
@@ -151,14 +154,23 @@ void CameraRealsense::captureFrame(bool filter_background) {
 
     // Filter point cloud using z filter
     if (filter_background) {
-        pcl::PassThrough<pcl::PointXYZRGB> cloud_filter; // Create the filtering object
+        /*pcl::PassThrough<pcl::PointXYZRGB> cloud_filter; // Create the filtering object
         cloud_filter.setInputCloud(cloud);           // Input generated cloud to filter
         cloud_filter.setFilterFieldName("z");        // Set field name to Z-coordinate
-        cloud_filter.setFilterLimits(0.0, 1.0);      // Set accepted interval values
-        cloud_filter.filter(*current_frame);              // Filtered Cloud Outputted
+        cloud_filter.setFilterLimits(0.0, 1.0);     // Set accepted interval values
+        cloud_filter.filter(*current_frame);    */          // Filtered Cloud Outputted
+
+        pcl::CropBox<pcl::PointXYZRGB> cropBoxFilter(true);
+        cropBoxFilter.setInputCloud(cloud);
+        Eigen::Vector4f min_pt(-0.7f, -1.0f, 0.0f, 1.0f);
+        Eigen::Vector4f max_pt(0.7f, 1.0f, 1.0f, 1.0f);
+        cropBoxFilter.setMin(min_pt);
+        cropBoxFilter.setMax(max_pt);
+
+        cropBoxFilter.filter(*current_frame);
     }
     else {
         current_frame = cloud;
     }
-
+    //std::cout << current_frame->size() << std::endl;
 }

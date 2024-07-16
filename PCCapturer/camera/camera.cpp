@@ -19,3 +19,7 @@ cloud_pointer Camera::getCurrentFrame() {
 void Camera::setFramesToSkip(int _frames_to_skip) {
     frames_to_skip = _frames_to_skip;
 }
+
+int Camera::getFrameSize() {
+    return current_frame->size();
+}

@@ -41,7 +41,7 @@ void ResultWriter::addEncodingDuration(uint32_t frame_id, uint32_t duration, uin
 }
 
 // Timestamp of frame transmission
-void ResultWriter::addSendTimestamp(uint32_t frame_id, uint32_t _full_size)
+void ResultWriter::addSendTimestamp(uint32_t frame_id, uint8_t layer_id, uint64_t _full_size)
 {
 	if (frame_id % SAVE_FRAME_N != 0)
 		return;
@@ -50,10 +50,10 @@ void ResultWriter::addSendTimestamp(uint32_t frame_id, uint32_t _full_size)
 	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 		std::chrono::system_clock::now().time_since_epoch()
 	);
-	for (int i = 0; i < layers_per_frame[frame_id]; i++) {
-		results[frame_id][i].send_timestamp = ms.count();
-		results[frame_id][i].full_size = _full_size;
-	}
+	//for (int i = 0; i < layers_per_frame[frame_id]; i++) {
+		results[frame_id][layer_id].send_timestamp = ms.count();
+		results[frame_id][layer_id].full_size = _full_size;
+	//}
 
 }
 
@@ -77,6 +77,7 @@ void ResultWriter::setLayersPerFrame(uint32_t frame_id, uint8_t layers)
 	if (frame_id % SAVE_FRAME_N != 0)
 		return;
 	layers_per_frame[frame_id] = layers;
+	addRecordIfNotExist(frame_id);
 }
 
 // This will add a record for the frame if it doesn't already exist

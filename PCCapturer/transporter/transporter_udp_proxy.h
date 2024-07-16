@@ -10,7 +10,6 @@
 #include <vector>
 #include <queue>
 #include <thread>
-#include <mutex>
 #include <windows.h>
 
 class TransporterUDPProxy : public Transporter
@@ -19,7 +18,8 @@ public:
     void SetFragmentSize(int _fragmentSize);
     void Init();
     void SetupConnection(std::string ip, uint32_t port);
-    void SendEncodedData(size_t size, const char*);
+    void SendEncodedData(size_t size, const char* data, bool indi, uint64_t clientID);
+    std::map<uint64_t, uint32_t> GetClientBitrates();
     InputPacket PollNextPacket(uint32_t buf_size);
 private:
     WSADATA wsa;

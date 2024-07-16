@@ -30,9 +30,12 @@ void CameraMock::captureFrame(bool filterBackground) {
     previous_time = current_time;
     if (elapsed_time < interframe_delay) // If the elapsed time is less than the desired frame time, sleep for the remaining time
     {
+        //std::cout << interframe_delay - elapsed_time << std::endl;
         std::this_thread::sleep_for(interframe_delay - elapsed_time);
     }
+    previous_time = std::chrono::high_resolution_clock::now();
     // Need to call end here for optimisation
     timeEndPeriod(1);
     rr_counter = (rr_counter + 1) % n_files;
 }
+
