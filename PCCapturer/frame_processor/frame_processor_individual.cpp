@@ -30,6 +30,7 @@ int FrameProcessorIndividual::ProcessNextFrame()
     ResultWriter::setLayersPerFrame(curr_frame_nr, n_clients);
     for (auto const& [client_id, bw] : client_to_bw)
     {
+      
         tp.AddJob([this, client_id, bw, completed_jobs, start_time, curr_frame, curr_frame_nr, n_clients, min_pt, max_pt] {
             float sample_rate = this->predictSampleRate(bw*0.9);
             // std::cout << i << " " <<  sample_rate << " " << compression_factor << std::endl;

@@ -83,20 +83,10 @@ int main(int argc, char** argv)
         use_mock_transport = true;
     }
 
-    std::string proxy_addr = std::string(input.getCmdOption("-a"));
-    if (proxy_addr.empty() && !use_mock_transport) {
-        std::cout << "Provide proxy address with -a";
+    std::string proxy_config = std::string(input.getCmdOption("-p"));
+    if (proxy_config.empty() && !use_mock_transport) {
+        std::cout << "Provide proxy config with -p";
         return 0;
-    }
-
-    std::string proxy_port_str = std::string(input.getCmdOption("-p"));
-    uint32_t proxy_port;
-    if (proxy_port_str.empty() && !use_mock_transport) {
-        std::cout << "Provide proxy port with -p";
-        return 0;
-    }
-    else if(!use_mock_transport){
-        proxy_port = std::stoi(proxy_port_str);
     }
 
     bool use_camera = false;
@@ -132,11 +122,11 @@ int main(int argc, char** argv)
         transporter = std::make_shared<TransporterUDPProxy>();
     }
     
-    transporter->Init();
-    transporter->SetupConnection(proxy_addr, proxy_port);
-    //while (!transporter->GetIsClientConnected()) {
+    transporter->Init(proxy_config);
+    transporter->SetupConnection();
+    while (!transporter->GetIsClientConnected()) {
         // Busy Wait, maybe change to condition variable
-   // }
+    }
     std::cout << "can start sending data" << std::endl;
 
 

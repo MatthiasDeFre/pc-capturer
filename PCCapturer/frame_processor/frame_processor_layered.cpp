@@ -18,6 +18,7 @@ int FrameProcessorLayered::ProcessNextFrame()
     // Set the current captured frame as the next frame to be sampled
     sampler->setCloud(cam->getCurrentFrame());
     // Perform sampling
+    
     sampler->createLayers();
     //    pcl::io::savePLYFileASCII("frame_vop_" + std::to_string(curr_frame) +     ".ply", *cam->getCurrentFrame());
     //std::cout << curr_frame;

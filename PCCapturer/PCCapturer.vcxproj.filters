@@ -69,6 +69,9 @@
     <ClInclude Include="frame_processor\frame_processor_fixed_pc_size.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="json.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="transporter\transporter_udp_proxy.cpp">

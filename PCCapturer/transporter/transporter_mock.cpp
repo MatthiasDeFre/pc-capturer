@@ -1,11 +1,11 @@
 #include "transporter_mock.h"
 
-void TransporterMock::Init() {
+void TransporterMock::Init(const std::string& config_path) {
 	
 }
 
 // Connection setup performed by sending / receiving a simple hello message
-void TransporterMock::SetupConnection(std::string ip, uint32_t port) {
+void TransporterMock::SetupConnection() {
 	isClientConnected = true;
 }
 

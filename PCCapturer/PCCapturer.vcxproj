@@ -71,6 +71,16 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgUseStatic>false</VcpkgUseStatic>
+    <VcpkgTriplet>
+    </VcpkgTriplet>
+    <VcpkgAdditionalInstallOptions>
+    </VcpkgAdditionalInstallOptions>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -111,7 +121,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;PCCAPTURER_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -129,8 +139,9 @@
       <PreprocessorDefinitions>NDEBUG;PCCAPTURER_EXPORTS;_CRT_SECURE_NO_WARNINGS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>C:\Users\matth\OneDrive\Documenten\SPIRIT-CLEAN\pc-capturer\PCCapturer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -139,7 +150,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>pcl_common.lib;pcl_features.lib;pcl_io.lib;pcl_io_ply.lib;pcl_octree.lib;pcl_filters.lib;pcl_search.lib;realsense2.lib;boost_atomic-vc140-mt.lib;boost_chrono-vc140-mt.lib;boost_container-vc140-mt.lib;boost_context-vc140-mt.lib;boost_coroutine-vc140-mt.lib;boost_date_time-vc140-mt.lib;boost_exception-vc140-mt.lib;boost_filesystem-vc140-mt.lib;boost_graph-vc140-mt.lib;boost_iostreams-vc140-mt.lib;boost_math_c99f-vc140-mt.lib;boost_math_c99l-vc140-mt.lib;boost_math_c99-vc140-mt.lib;boost_math_tr1f-vc140-mt.lib;boost_math_tr1l-vc140-mt.lib;boost_math_tr1-vc140-mt.lib;boost_random-vc140-mt.lib;boost_regex-vc140-mt.lib;boost_serialization-vc140-mt.lib;boost_system-vc140-mt.lib;boost_thread-vc140-mt.lib;boost_wserialization-vc140-mt.lib;draco.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -153,6 +164,7 @@
     <ClInclude Include="frame_processor\frame_processor_layered.h" />
     <ClInclude Include="frame_processor\frame_processor_individual.h" />
     <ClInclude Include="frame_processor\frame_processor_fixed_rate.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="thread_pool.h" />
     <ClInclude Include="transporter\transporter_mock.h" />
     <ClInclude Include="worker\worker_layered.h" />

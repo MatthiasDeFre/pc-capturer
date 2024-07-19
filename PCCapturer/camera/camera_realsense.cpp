@@ -129,17 +129,18 @@ CameraRealsense::CameraRealsense(int width, int height, int fps) : Camera(width,
         std::cout << "laser power " << range.max << std::endl;
         //depth_sensor.set_option(RS2_OPTION_LASER_POWER, 0.f); // Disable laser
     }
-    depth_sensor.set_option(RS2_OPTION_MAX_DISTANCE, 0.75);
+    //depth_sensor.set_option(RS2_OPTION_MAX_DISTANCE, 0.75);
 }
 
 void CameraRealsense::captureFrame(bool filter_background) {
-
+   
     // Capture a single frame and obtain depth + RGB values from it
     if (frames_to_skip > 0) {
         for (int i = 0; i < frames_to_skip; i++) {
             pipe.wait_for_frames();
         }
     }
+  
     auto frames = pipe.wait_for_frames();
 
     auto depth = frames.get_depth_frame();
@@ -148,7 +149,7 @@ void CameraRealsense::captureFrame(bool filter_background) {
     pc.map_to(RGB);
     // Generate Point Cloud
     auto points = pc.calculate(depth);
-
+    
     // Convert generated Point Cloud to PCL Formatting
     cloud_pointer cloud = pclConversion(points, RGB);
 
