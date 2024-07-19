@@ -1,11 +1,13 @@
 #pragma once
 #include "camera.h"
+
 // Realsense camera class
 class CameraRealsense : public Camera
 {
 public:
     CameraRealsense(int width = 848, int height = 484, int fps = 30);
     void captureFrame(bool filter_background);
+
 private:
     rs2::pointcloud pc;
     rs2::pipeline pipe;

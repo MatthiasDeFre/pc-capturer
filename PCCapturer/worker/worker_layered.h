@@ -5,8 +5,8 @@
 #include <thread>
 #include <queue>
 #include <mutex>
-#include "transporter/transporter.h"
-#include "encoder/encoder_draco.h"
+#include "../transporter/transporter.h"
+#include "../encoder/encoder_draco.h"
 
 struct MultiLayerMainHeader {
 	uint32_t n_layers;
@@ -22,10 +22,10 @@ struct MultiLayerSideHeader {
 	uint32_t framelen;
 };
 
-class MultiLayerProcessor
+class WorkerLayered
 {
 public:
-	MultiLayerProcessor(std::shared_ptr<Transporter> _transporter);
+	WorkerLayered(std::shared_ptr<Transporter> _transporter);
 	void process_layers(pcl::PointXYZ min, pcl::PointXYZ max, std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr>&& layers);
 private:
 	std::queue<std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr>> layers_buffer;

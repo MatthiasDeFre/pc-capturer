@@ -13,7 +13,6 @@
 #include "sampler/sampler_uniform.h"
 #include "encoder/encoder_draco.h"
 #include "transporter/transporter_udp_proxy.h"
-#include "multi_layer_processor.h"
 //#include "WebRTCTransporter.h"
 #include <Windows.h>
 #include <winsock2.h>
@@ -21,7 +20,11 @@
 #include "result_writer.h"
 #include "camera/camera_realsense.h"
 #include "camera/camera_mock.h"
-#include "frame_processor/output_frame_processor.h"
+#include "frame_processor/frame_processor_layered.h"
+#include "frame_processor/frame_processor_individual.h"
+#include "frame_processor/frame_processor_fixed_rate.h"
+#include "frame_processor/frame_processor_fixed_pc_size.h"
+#include "transporter/transporter_mock.h"
 #pragma comment(lib,"ws2_32.lib") //Winsock Library
 
 // Global Variables
@@ -63,6 +66,7 @@ int main(int argc, char** argv)
 
     std::shared_ptr<Transporter> transporter(nullptr);
     std::shared_ptr<Camera> cam(nullptr);
+    std::shared_ptr<FrameProcessor> frame_proc(nullptr);
 
     // ------ Command line argument processing --------
     const std::string& results_file = input.getCmdOption("-r");
@@ -72,22 +76,17 @@ int main(int argc, char** argv)
         ResultWriter::setFileName(results_file);
         std::cout << results_file;
     }
-    ResultWriter::init();
+    //ResultWriter::init();
 
-    std::string proxy_addr = std::string(input.getCmdOption("-a"));
-    if (proxy_addr.empty()) {
-        std::cout << "Provide proxy address with -a";
-        return 0;
+    bool use_mock_transport = false;
+    if (input.cmdOptionExists("-t")) {
+        use_mock_transport = true;
     }
 
-    std::string proxy_port_str = std::string(input.getCmdOption("-p"));
-    uint32_t proxy_port;
-    if (proxy_port_str.empty()) {
-        std::cout << "Provide proxy port with -p";
+    std::string proxy_config = std::string(input.getCmdOption("-p"));
+    if (proxy_config.empty() && !use_mock_transport) {
+        std::cout << "Provide proxy config with -p";
         return 0;
-    }
-    else {
-        proxy_port = std::stoi(proxy_port_str);
     }
 
     bool use_camera = false;
@@ -102,16 +101,29 @@ int main(int argc, char** argv)
             return 0;
         }
     }
+
+    // Use layered encoding vs individual encoding
+    // Server needs to also use this option
+    const std::string& processor_strategy = input.getCmdOption("-l");
+    if (processor_strategy.empty()) {
+        std::cout << "Use -l to provide a processor strategy (layer, indiv, fixed)";
+    }
     // END ------ Command line argument processing --------
-    std::vector<float> layer_ratios = { 0.60, 0.25 };
-    std::shared_ptr<Sampler> sampler = std::make_shared<SamplerUniform>(SamplerUniform{ layer_ratios });
+    //std::vector<float> layer_ratios = { 0.60, 0.25 };
+    //std::shared_ptr<Sampler> sampler = std::make_shared<SamplerUniform>(SamplerUniform{ layer_ratios });
 
 
     // ------ Network tranport initiliasation ------
     std::cout << "transporter";
-    transporter = std::make_shared<TransporterUDPProxy>(TransporterUDPProxy{});
-    transporter->Init();
-    transporter->SetupConnection(proxy_addr, proxy_port);
+    if (use_mock_transport) {
+        transporter = std::make_shared<TransporterMock>();
+    }
+    else {
+        transporter = std::make_shared<TransporterUDPProxy>();
+    }
+    
+    transporter->Init(proxy_config);
+    transporter->SetupConnection();
     while (!transporter->GetIsClientConnected()) {
         // Busy Wait, maybe change to condition variable
     }
@@ -120,18 +132,36 @@ int main(int argc, char** argv)
 
     // END ------ Network tranport initiliasation ------
     // ------ Capturing & Processing Loop ------
-    MultiLayerProcessor m(transporter);
+    //MultiLayerProcessor m(transporter);
     int curr_frame = -1;
     if (use_camera) {
-        cam = std::make_shared<CameraRealsense>(CameraRealsense{  });
+        cam = std::make_shared<CameraRealsense>();
     }
     else {
-        cam = std::make_shared<CameraMock>(CameraMock{ content_dir });
+        cam = std::make_shared<CameraMock>(content_dir);
     }
-    std::shared_ptr<MultiLayerProcessor> multi_layer_processor = std::make_shared<MultiLayerProcessor>(transporter);
-    OutputFrameProcessor o_proc(cam, sampler, multi_layer_processor);
+
+    if(processor_strategy == "layer") {
+        frame_proc = std::make_shared<FrameProcessorLayered>(cam, transporter);
+    } 
+    else if (processor_strategy == "indiv") {
+        uint8_t n_threads = 3;
+        auto indi_proc = std::make_shared<FrameProcessorIndividual>(cam, transporter, n_threads);
+        frame_proc = indi_proc;
+    }
+    else if (processor_strategy == "fixed") {
+        frame_proc = std::make_shared<FrameProcessorFixedRate>(cam, transporter, std::vector<uint32_t>{35000000, 25000000, 15000000});
+    }
+    else if (processor_strategy == "fixed_pc") {
+        frame_proc = std::make_shared<FrameProcessorFixedPcSize>(cam, transporter, 125000);
+    }
+    else {
+        std::cout << "Invalid processor strategy" << std::endl;
+        return 0;
+    }
+
     while (true) {
-        o_proc.ProcessNextFrame();
+        frame_proc->ProcessNextFrame();
     }
     // END ------ Capturing & Processing Loop ------
     std::cout << "Exiting Program... " << std::endl;

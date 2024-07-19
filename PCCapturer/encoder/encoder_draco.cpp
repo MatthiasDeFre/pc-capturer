@@ -1,5 +1,6 @@
 #include "encoder_draco.h"
 #include <draco/compression/encode.h>
+#include <draco/compression/expert_encode.h>
 #include <draco/compression/point_cloud/point_cloud_sequential_encoder.h>
 #include <draco/compression/point_cloud/point_cloud_sequential_decoder.h>
 #include <draco/point_cloud/point_cloud_builder.h>
@@ -8,8 +9,10 @@
 #include <string.h>
 #include <fstream>
 #include <chrono>
+#include "../result_writer.h"
+#include <random>
 const char* EncoderDraco::encode() {
-    std::chrono::time_point<std::chrono::high_resolution_clock> start_clock = std::chrono::high_resolution_clock::now();
+ 
     draco::PointCloudBuilder builder;
     draco::PointCloud out_pc;
     builder.Start(input_cloud->size());
@@ -24,6 +27,7 @@ const char* EncoderDraco::encode() {
         pos[0] = input_cloud->points[i].x;
         pos[1] = input_cloud->points[i].y;
         pos[2] = input_cloud->points[i].z;
+        
         col[0] = input_cloud->points[i].r;
         col[1] = input_cloud->points[i].g;
         col[2] = input_cloud->points[i].b;
@@ -31,19 +35,27 @@ const char* EncoderDraco::encode() {
         builder.SetAttributeValueForPoint(att_id_col, draco::PointIndex(i), &col);
     }
     std::unique_ptr<draco::PointCloud> pc = builder.Finalize(false);
-    
+
     draco::Encoder encoder;
     encoder.SetEncodingMethod(draco::POINT_CLOUD_KD_TREE_ENCODING);
     // Can potentially change quantization here
     encoder.SetAttributeQuantization(draco::GeometryAttribute::POSITION, 11);
-
-    if (!encoder.EncodePointCloudToBuffer(*pc, &buffer).ok()) {
+    encoder.SetSpeedOptions(10, 10);
+    encoder.SetEncodingMethod(draco::POINT_CLOUD_KD_TREE_ENCODING);
+    std::unique_ptr<draco::ExpertEncoder> expert_encoder;
+    expert_encoder.reset(new draco::ExpertEncoder(*pc));
+    expert_encoder->Reset(encoder.CreateExpertEncoderOptions(*pc));
+    // Best encoding method of the two available
+    std::chrono::time_point<std::chrono::high_resolution_clock> start_clock = std::chrono::high_resolution_clock::now();
+    if (!expert_encoder.get()->EncodeToBuffer(&buffer).ok()) {
         std::cout << "oops";
     }
     encodedSize = buffer.size();
+    
     auto end_clock = std::chrono::high_resolution_clock::now();
     int duration = duration_cast<std::chrono::milliseconds>(end_clock - start_clock).count();
-  //  ResultWriter::addEncodingDuration(frame_id, duration, layer_id, input_cloud->size() * 15, encodedSize);
+   // std::cout << input_cloud->size() << " " << duration << std::endl;
+    //ResultWriter::addEncodingDuration(frame_id, duration, layer_id, input_cloud->size() * 15, encodedSize);
     // Return raw data pointer (easier for further manipulations)
     return buffer.data();
 }
