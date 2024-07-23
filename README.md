@@ -26,13 +26,13 @@ This project requires several dependancies for the capturing and preprocessing o
 </ul>
 
 ## Usage
-Following command line parameters can be used to change the behaviour of the application:
+Following command line parameters can be used to change the behaviour of the application. If you provide a config file the Golang peer will automatical start as well. You can find an example of a config file in the `config_example` directory.
 
 | **Parameter** 	| **Name**          	| **Description**                                                      	| **Example**     	|
 |---------------	|-------------------	|----------------------------------------------------------------------	|-----------------	|
 | -r            	| Result File       	| Location and file name where metrics will be saved                   	| results_100.csv 	|
 | -a            	| Proxy Address     	| The IP address of the proxy where packets are forwarded to           	| 127.0.0.1       	|
-| -p            	| Proxy Port        	| The port of the proxy where packets are forwarded to                 	| 8001            	|
+| -p            	| Proxy Config       	| Config file used to automatically start the Golang peer              	| config.json      	|
 | -i            	| Use Camera        	| Use a Realsense camera as input for the pipeline                     	| n.a.            	|
 | -d            	| Content Directory 	| When not using a camera .ply files in this location are used instead 	| frames          	|
 
